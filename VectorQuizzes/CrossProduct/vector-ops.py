@@ -1,17 +1,16 @@
 from vector import Vector
 
 #question 1
-vector1 = Vector([3.039, 1.879])
-vector2 = Vector([0.825, 2.036])
-print vector1.projection_on(vector2)
+vector1 = Vector([8.462, 7.893, -8.187])
+vector2 = Vector([6.984, -5.975, 4.778])
+print vector1.cross_product(vector2)
 
 #question 2
-vector3 = Vector([-9.88, -3.264, -8.159])
-vector4 = Vector([-2.155, -9.353, -9.473])
-print vector3.perpendicular_component_of(vector4)
+vector3 = Vector([-8.987, -9.838, 5.031])
+vector4 = Vector([-4.268, -1.861, -8.866])
+print vector3.parallelogram_area(vector4)
 
 #question 3
-vector5 = Vector([3.009, -6.172, 3.692, -2.51])
-vector6 = Vector([6.404, -9.144, 2.759, 8.718])
-print vector5.projection_on(vector6)
-print vector5.perpendicular_component_of(vector6)
+vector5 = Vector([1.5, 9.547, 3.691])
+vector6 = Vector([-6.007, 0.124, 5.772])
+print vector5.triangle_area(vector6)

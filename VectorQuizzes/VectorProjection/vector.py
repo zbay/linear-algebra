@@ -91,5 +91,5 @@ class Vector(object):
         vParallelLength = self.dot_product(unitVector) #length of Vparallel is the basis unit vector dot V
         return unitVector.scalar_multiply(vParallelLength) #VParallel is the basis unit vector times the length of Vparallel
      
-    def perpendicular_component_of(self, basis): #the perpendicular component of v, extracted from self's component in that direction
+    def perpendicular_component_of(self, basis): #the perpendicular component of v, derived from self's component in its direction
         return self.subtract(self.projection_on(basis)) #Vperpendicular is V minus Vparallel

@@ -1,0 +1,13 @@
+* Linear equations: can add and subtract vars and constants, and multiply a variable by a constants
+* 1D: Given a base point and a direction vector, you can define a line. x(t) = x0 + t*v where x and v are vectors
+* 2D: Ax + By = 0
+    * [A * [x = 0
+       B]  y] 
+    * Normal vector is (A, B), and the constant is k
+    * One direction vector is [B
+                               -A]
+    * Or: Ax+By = k and Cx + Dy = k
+        * AD - BC = 0? lines are parallel
+* Two lines in 2D are parallel if their normal vectors are parallel vectors
+* Two parallel lines are equal iff the vector connecting one point on each is orthogonal to the lines normal vectors
+* Find intersection of two nonintersecting lines via Gaussian upper triangular elimination

@@ -11,3 +11,14 @@
 * Two lines in 2D are parallel if their normal vectors are parallel vectors
 * Two parallel lines are equal iff the vector connecting one point on each is orthogonal to the lines normal vectors
 * Find intersection of two nonintersecting lines via Gaussian upper triangular elimination
+* Plane equation: Ax + By + Cz = k
+* Parallel planes have parallel normal vectors
+* Two parallel lines are equal if the vector connecting one point on each is orthogonal to the normal vector of each
+* Add parallel and equal functionality to plane.py
+* If two planes are not equal and not parallel, they must intersection
+* Cross product of normal vectors orthogonal to both normal vectors
+* Intersection of planes is a line with direction vector: cross product of the normal vectors to the planes
+    * No solution if parallel and unequal
+    * A plane if equal
+* Three planes needed for point intersection in 3D, like at least two lines needed for point intersection in 2D
+* Solve plane intersection with Gaussian elimination

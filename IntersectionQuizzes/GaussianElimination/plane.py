@@ -89,14 +89,14 @@ class Plane(object):
 
         return output
     
-    def is_parallel(self, otherLine):
+    def is_parallel(self, otherLine): 
         return self.normal_vector.parallel_to(otherLine.normal_vector)
 
     def is_equal(self, otherLine):
         connectorVector = self.basepoint.subtract(otherLine.basepoint)
         return connectorVector.orthogonal_to(self.normal_vector)
 
-    def intersection(self, otherLine):
+    def intersection2(self, otherLine):
         if self.is_equal(otherLine):
             return "The planes are equal and intersect at every point."
         elif self.is_parallel(otherLine):
@@ -104,21 +104,48 @@ class Plane(object):
         else:
             return "These planes intersect somewhere, either in a line or at a point."
     
-    def point_intersection(self, line2, line3):
-        system = self.matricise([self, line2, line3])
-        system = self.reduce_matrix(system)
-        solution_coordinates = self.solve(system)
-        return solution_coordinates
+    def intersection3(self, line2, line3):
+        system = self.matricise([self, line2, line3]) #convert the planes into matrix form, with each normal vector as a column
+        system = self.reduce_matrix(system) #convert to reduced row echelon form
+        if self.is_equal(line2) and self.is_equal(line3):
+            return "The planes are equal and intersect at every point."
+        elif self.is_parallel(line2) and self.is_parallel(line3):
+            return "The planes are parallel and do not intersect."
+        elif self.is_invalid(system):
+            return "Invalid system: there is no intersection."
+        elif self.redundant3(system):
+            return self.solve_line(system)
+        else:
+            return self.solve_point(system)
         
-    def solve(self, system):
+    def solve_point(self, system):
         #solve for z: z = c
         z = Decimal(round(system[2][3], 3))
         solution_coordinates = [0,0, round(system[2][2], 3)]
         #solve for y: c -= z * x3
         y = Decimal(round(system[1][3] - z*system[1][2], 3))
         #solve for x: c -= ((z * x3) + (y*x2))
-        x = Decimal(round(system[0][3] - ((z*system[0][2]) +(y*system[0][1]))))
+        x = Decimal(round(system[0][3] - ((z*system[0][2]) +(y*system[0][1])), 3))
         return "( " + str(x) + ", " + str(y) + ", " + str(z) + " )"
+    
+    def solve_line(self, system): #should I update for x = 0 in all columns?
+        # remember pivot vs free variables
+        # identify whether y or z can be solved for
+        if MyDecimal(system[1][1]).is_near_zero(): # z can be solved for
+            #solve for z: z = c/x3
+           z = Decimal(round(system[1][3]/system[1][2], 3))
+          # modify c: c += (y * x2) 
+           c = Decimal(round(system[0][3] - (z*system[0][2]), 3))
+
+           return str(system[0][0]) + "x + " + str(system[0][1]) + "y = " + str(c) + " and z = " + str(z)
+        elif MyDecimal(system[1][2]).is_near_zero(): # y can be solved for
+            # solve for y: y = c
+            y = Decimal(round(system[1][3], 3))
+            # modify c: c += (y * x2) 
+            c = Decimal(round(system[0][3] - (y*system[0][1]), 3))
+            return str(system[0][0]) + "x + " + str(system[0][2]) + "z = " + str(c) + " and y = " + str(y)
+        else:
+            return "Error. Could not solve."
     
     def matricise(self, rows):
         matrix = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
@@ -137,15 +164,16 @@ class Plane(object):
         # If [1][1] is 0, swap with row 3 
             
         #get [0][0] to 1
-        if matrix[0][0] == 0:
-            if matrix[1][0] != 0:
+        if MyDecimal(matrix[0][0]).is_near_zero():
+            if not MyDecimal(matrix[1][0]).is_near_zero():
                 matrix = self.swap_rows(matrix, 0, 1)
-            elif matrix[2][0] != 0:
+            elif not MyDecimal(matrix[2][0]).is_near_zero():
                 matrix = self.swap_rows(matrix, 0, 2)
         
         leadCoefficient = matrix[0][0]
-        for i in range(4):
-            matrix[0][i] /= leadCoefficient
+        if not MyDecimal(leadCoefficient).is_near_zero():
+            for i in range(4):
+                matrix[0][i] /= leadCoefficient
         
         #get [1][0] to 0
         leadCoefficient = matrix[1][0]
@@ -158,30 +186,41 @@ class Plane(object):
             matrix[2][i] -= leadCoefficient*matrix[0][i]
         
         #get [1][1] to 1
-        if matrix[1][1] == 0:
-            if matrix[2][1] != 0:
+        if MyDecimal(matrix[1][1]).is_near_zero():
+            if not MyDecimal(matrix[2][1]).is_near_zero():
                 matrix = self.swap_rows(matrix, 1, 2)
         leadCoefficient = matrix[1][1]
-        for i in range(3):
-            matrix[1][i+1] /= leadCoefficient
+        if not MyDecimal(leadCoefficient).is_near_zero():
+            for i in range(3):
+                matrix[1][i+1] /= leadCoefficient
         
         #get [2][1] to 0
         leadCoefficient = matrix[2][1]
-        for i in range(4):
-            matrix[2][i] -= leadCoefficient*matrix[1][i]
+        if not MyDecimal(leadCoefficient).is_near_zero():
+            for i in range(4):
+                matrix[2][i] -= leadCoefficient*matrix[1][i]
         
         #get [2][2] to 1
+        
         leadCoefficient = matrix[2][2]
-        for i in range(2):
-            matrix[2][i+2] /= leadCoefficient
+        if not MyDecimal(leadCoefficient).is_near_zero():
+            for i in range(2):
+                matrix[2][i+2] /= leadCoefficient
         
         return matrix
         
-    def swap_rows(self, matrix, row1, row2):
+    def swap_rows(self, matrix, row1, row2): #helper for reduce
         tempRow = matrix[row1]
-        matrix[row1] = row2
+        matrix[row1] = matrix[row2]
         matrix[row2] = tempRow
         return matrix
+    
+    def is_invalid(self, matrix): #tests the last row to see if it has a contradiction
+        # should I use more conditions to test? Test row 1 and row 2?
+        return MyDecimal(matrix[2][1]).is_near_zero() and MyDecimal(matrix[2][2]).is_near_zero() and not MyDecimal(matrix[2][3]).is_near_zero()
+    
+    def redundant3(self, matrix): #tests the last row to see if it's redundant
+        return MyDecimal(matrix[2][1]).is_near_zero() and MyDecimal(matrix[2][2]).is_near_zero() and MyDecimal(matrix[2][3]).is_near_zero()
         
 
     @staticmethod

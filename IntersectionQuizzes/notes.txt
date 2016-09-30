@@ -22,3 +22,5 @@
     * A plane if equal
 * Three planes needed for point intersection in 3D, like at least two lines needed for point intersection in 2D
 * Solve plane intersection with Gaussian elimination
+* In an underdetermined system, use free variables (one set to 1, the rest set to 0) to determine the pivot variable values. rref: the vals
+    above the pivots must be 0

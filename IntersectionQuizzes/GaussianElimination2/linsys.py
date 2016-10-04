@@ -57,9 +57,16 @@ class LinearSystem(object):
                 current_coefficient = system[current_row][current_column]
                 if MyDecimal(current_coefficient).is_near_zero():
                     # move the first nonzero term up high
-                    system.swap_with_highest_nonzero_row(current_row, current_column)
-                    # set column below pivot to zeroes
-                    system.clear_below(current_row, current_column)
+                    if first_nonzero: # if all preceding values are 0
+                        if system.swap_with_highest_nonzero_row(current_row, current_column): #if a swappable row exists
+                            # set column below pivot to zeroes
+                            system.clear_below(current_row, current_column)   
+                            if current_column == num_variables - 1 and self.planes[current_row][current_column] == 0:
+                                current_column += 1
+                        else:
+                            current_column += 1
+                    else:
+                        current_column += 1
                 else:
                     if first_nonzero: # if all the prior columns in this row are zeroes
                         # clear the first valued column's values in other rows
@@ -73,18 +80,48 @@ class LinearSystem(object):
                 system[i] = Plane()
         return system
     
+    def compute_rref(self):
+        system = self.compute_triangular_form()
+        
+        for current_row in range(len(system.planes)):
+            pivot_found = False
+            for current_col in range(system.planes[0].dimension):
+                if not MyDecimal(system.planes[current_row][current_col]).is_near_zero():
+                    if not pivot_found:
+                        pivot_found = True
+                        system.clear_above(current_row, current_col)
+                        system.set_pivot_to_one(current_row, current_col)
+        return system
+    
+    def set_pivot_to_one(self, current_row, current_col):
+        divide_ratio = 1
+        for i in range (current_col, self.planes[0].dimension+1):
+            if i == current_col:
+                divide_ratio = self.planes[current_row][current_col]
+            self.planes[current_row][i] /= divide_ratio
+    
     def swap_with_highest_nonzero_row(self, row, column): #swap row with the highest row that's nonzero in the same column
+        changed = False
         for i in range(row+1, len(self.planes)):
             if not MyDecimal(self.planes[i][column]).is_near_zero():
                 self.swap_rows(row, i)
+                changed = True
                 break
+        return changed
     
     def clear_below(self, row, column): # set to 0 below a pivot
         for i in range(row+1, len(self.planes)):
             if not MyDecimal(self.planes[i][column]).is_near_zero():
                 cancel_ratio = -(self.planes[i][column] / self.planes[row][column])
                 self.add_multiple_times_row_to_row(cancel_ratio, row, i)
-
+    
+    def clear_above(self, row, column): # set to 0 above a pivot
+        for i in range(row):
+            if not MyDecimal(self.planes[i][column]).is_near_zero():
+                coefficient = -(self.planes[i][column] / self.planes[row][column])
+                self.add_multiple_times_row_to_row(coefficient, row, i) #cancel the value directly above pivot
+            
+        
     def indices_of_first_nonzero_terms_in_each_row(self):
         num_equations = len(self)
         num_variables = self.dimension

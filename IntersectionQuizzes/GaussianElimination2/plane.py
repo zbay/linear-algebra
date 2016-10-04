@@ -33,9 +33,9 @@ class Plane(object):
         
     def __getitem__(self,index):
         if index == self.dimension:
-            return self.constant_term
+            return Decimal(self.constant_term)
         else:
-            return self.normal_vector[index]
+            return Decimal(self.normal_vector[index])
             
     def __setitem__(self,index,value):
         if index == self.dimension:
@@ -47,7 +47,7 @@ class Plane(object):
         if self.dimension != p.dimension:
             return False
         for i in range(self.dimension):
-            if not MyDecimal(self.normal_vector[i] - p.normal_vector[i]).is_near_zero():
+            if not MyDecimal(float(self.normal_vector[i]) - float(p.normal_vector[i])).is_near_zero():
                 return False
         if not MyDecimal(self.constant_term - p.constant_term).is_near_zero():
             return False

@@ -42,6 +42,48 @@ class LinearSystem(object):
     def add_multiple_times_row_to_row(self, coefficient, row_to_add, row_to_be_added_to):
         for i in range(self.dimension+1):
             self.planes[row_to_be_added_to][i] += coefficient*self.planes[row_to_add][i]
+    
+    def compute_triangular_form(self):
+        system = deepcopy(self)
+        
+        num_equations = len(self.planes)
+        num_variables = self.planes[0].dimension
+        current_column = 0
+        
+        for current_row in range(num_equations):
+            current_column = current_row
+            first_nonzero = True
+            while current_column < num_variables:
+                current_coefficient = system[current_row][current_column]
+                if MyDecimal(current_coefficient).is_near_zero():
+                    # move the first nonzero term up high
+                    system.swap_with_highest_nonzero_row(current_row, current_column)
+                    # set column below pivot to zeroes
+                    system.clear_below(current_row, current_column)
+                else:
+                    if first_nonzero: # if all the prior columns in this row are zeroes
+                        # clear the first valued column's values in other rows
+                        system.clear_below(current_row, current_column)
+                        first_nonzero = False
+                    current_column+=1
+                    continue
+        # convert the redundant equations to all zeroes
+        if num_equations > num_variables:
+            for i in range(num_variables, num_equations):
+                system[i] = Plane()
+        return system
+    
+    def swap_with_highest_nonzero_row(self, row, column): #swap row with the highest row that's nonzero in the same column
+        for i in range(row+1, len(self.planes)):
+            if not MyDecimal(self.planes[i][column]).is_near_zero():
+                self.swap_rows(row, i)
+                break
+    
+    def clear_below(self, row, column): # set to 0 below a pivot
+        for i in range(row+1, len(self.planes)):
+            if not MyDecimal(self.planes[i][column]).is_near_zero():
+                cancel_ratio = -(self.planes[i][column] / self.planes[row][column])
+                self.add_multiple_times_row_to_row(cancel_ratio, row, i)
 
     def indices_of_first_nonzero_terms_in_each_row(self):
         num_equations = len(self)

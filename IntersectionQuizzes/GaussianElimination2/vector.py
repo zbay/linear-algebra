@@ -83,14 +83,14 @@ class Vector(object):
         dotProduct = self.dot_product(v)
         magnitudeProduct = self.magnitude() * v.magnitude()
         if MyDecimal(Decimal(magnitudeProduct)).is_near_zero():
-                return 0
+                return 0        
         elif radians:
             return math.acos(dotProduct/magnitudeProduct)
         else:
-            if round(dotProduct/magnitudeProduct, 6) == 1.0000:
+            if round(Decimal(dotProduct)/Decimal(magnitudeProduct), 6) == 1.0000:
                 return 0
             else:
-                return math.degrees(math.acos(dotProduct/magnitudeProduct))
+                return math.degrees(math.acos(Decimal(dotProduct)/Decimal(magnitudeProduct)))
     
     def parallel_to(self, v): #angle is close enough to zero, adjusting for rounding error
         angle = self.angle(v, False)

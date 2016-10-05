@@ -243,6 +243,12 @@ class Plane(object):
         matrix[row2] = tempRow
         return matrix
     
+    def invalid_plane(self):
+        for i in range(self.dimension):
+            if not MyDecimal(self[i]).is_near_zero():
+                return False
+        return True
+    
     def is_invalid(self, matrix): #tests the last row to see if it has a contradiction
         # should I use more conditions to test? Test row 1 and row 2?
         return MyDecimal(matrix[2][1]).is_near_zero() and MyDecimal(matrix[2][2]).is_near_zero() and not MyDecimal(matrix[2][3]).is_near_zero()

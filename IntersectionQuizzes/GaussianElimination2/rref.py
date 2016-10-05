@@ -40,3 +40,4 @@ if not (r[0] == Plane(normal_vector=Vector([float('1'),float('0'),float('0')]), 
         r[1] == Plane(normal_vector=Vector([float('0'),float('1'),float('0')]), constant_term=float(Decimal('7')/Decimal('9'))) and
         r[2] == Plane(normal_vector=Vector([float('0'),float('0'),float('1')]), constant_term=float(Decimal('2')/Decimal('9')))):
     print 'test case 4 failed'
+    

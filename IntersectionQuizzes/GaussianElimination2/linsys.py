@@ -43,6 +43,72 @@ class LinearSystem(object):
         for i in range(self.dimension+1):
             self.planes[row_to_be_added_to][i] += coefficient*self.planes[row_to_add][i]
     
+    def solve_system(self): # this assumes no free variables
+        system = self.compute_rref()
+        saved_solutions = ["None"] * system.planes[0].dimension
+        are_parallel = True
+        first_plane = system.planes[0]
+        for i in range(1, len(system.planes)):
+            if system.planes[i].invalid_plane():
+                return "The system is invalid; there is no intersection."
+            if not first_plane.is_parallel(system.planes[i]):
+                are_parallel = False
+                break
+        if are_parallel:
+            return "The lines are parallel; the system has an infinite number of solutions."
+        for i in range(len(system.planes)-1, -1, -1):
+            leftmost_one = system.leftmost_one(i)
+            for j in range(system.planes[0].dimension-1, -1, -1):
+                if saved_solutions[j] != "None" and not MyDecimal(system[i][j]).is_near_zero():
+                    system[i][system.planes[0].dimension] += saved_solutions[j] * system[i][j]
+                    system[i][j] = 0
+                else:
+                    if j == leftmost_one:
+                        saved_solutions[j] = system[i][system.planes[0].dimension]
+        for i in range(len(saved_solutions)):
+            if saved_solutions[i] == "None":
+                return "Infinitely many solutions."
+        return saved_solutions
+        
+        '''
+        if all are parallel to each other, return infinite solutions
+        for each row, starting from len(system.planes) and going to 0
+            test if plane is invalid
+                if so, indicate no solution
+            for each col from len(system.planes[0) to 0
+                if a saved value exists for that column's variable, multiply it by the column variable and add it to the constant
+                if the saved value doesn't exist, is the furthest left 1, and all values right except for constant are 0, save the value as the constant
+            find answers
+            assume no free variables
+        '''
+        
+        '''
+        1. output unique solution to system
+        2. or, indication there is no solution
+        3. or, indication of infinitely many solutions
+        '''
+    
+    '''def solve_paramaterized(self):
+        if all are parallel to each other, return infinite solutions
+        for each row, starting from len(system.planes) and going to 0
+            test if plane is invalid
+                if so, indicate no solution
+            for each col from len(system.planes[0) to 0
+                if a saved value exists for that column's variable, multiply it by the column variable and add it to the constant
+                if the saved value doesn't exist, is the furthest left 1, and all values right except for constant are 0, save the value as the constant
+                if the saved value doesn't exist, is the furthest left 1, and some values right other than constant are 0, save the value index as a FREE VARIABLE
+            if no free variables, find answers
+            if multiple free variables, set one to 1 and the rest to 0 in sequence
+            assume no free variables, though?
+        return ""
+        '''
+    
+    def leftmost_one(self, row):
+        for i in range(0, self.planes[0].dimension):
+            if MyDecimal(Decimal(self.planes[row][i]) - Decimal(1.0)).is_near_zero():
+                return i
+        return -1
+    
     def compute_triangular_form(self):
         system = deepcopy(self)
         

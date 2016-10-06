@@ -244,10 +244,12 @@ class Plane(object):
         return matrix
     
     def invalid_plane(self):
-        for i in range(self.dimension):
-            if not MyDecimal(self[i]).is_near_zero():
-                return False
-        return True
+        if not MyDecimal(self.constant_term).is_near_zero():
+            for i in range(self.dimension):
+                if not MyDecimal(self[i]).is_near_zero():
+                    return False
+            return True
+        return False
     
     def is_invalid(self, matrix): #tests the last row to see if it has a contradiction
         # should I use more conditions to test? Test row 1 and row 2?
@@ -255,7 +257,17 @@ class Plane(object):
     
     def redundant3(self, matrix): #tests the last row to see if it's redundant
         return MyDecimal(matrix[2][1]).is_near_zero() and MyDecimal(matrix[2][2]).is_near_zero() and MyDecimal(matrix[2][3]).is_near_zero()
-        
+    
+    def add(self, p):
+        for i in range(self.dimension+1):
+            self[i] += p[i]
+    
+    def is_blank(self):
+        is_blank = True
+        for i in range(self.dimension+1):
+            if not MyDecimal(self[i]).is_near_zero():
+                is_blank = False
+        return is_blank
 
     @staticmethod
     def first_nonzero_index(iterable):

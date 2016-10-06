@@ -1,4 +1,5 @@
-#goals: go to udacity. remember that swap rows and the two after it might not work
+#goals: proofread basepoint and direction vectors. Rework string for Parameterization
+#After making parameterization, figure out how to solve it
 
 from decimal import Decimal, getcontext
 from myDecimal import MyDecimal
@@ -44,6 +45,17 @@ class LinearSystem(object):
             self.planes[row_to_be_added_to][i] += coefficient*self.planes[row_to_add][i]
     
     def solve_system(self): # this assumes no free variables
+        '''
+        algorithm:
+        if all are parallel to each other, return infinite solutions
+        if any plane is invalid, indicate no solution
+        for each row, starting from len(system.planes) and going to 0
+            for each col from len(system.planes[0) to 0
+                if a saved value exists for that column's variable, multiply it by the column variable and add it to the constant
+                if the saved value doesn't exist, is the furthest left 1, and all values right except for constant are 0, save the value as the constant
+            find answers
+            if some variables are unassigned at the end, parameterize
+        '''
         system = self.compute_rref()
         saved_solutions = ["None"] * system.planes[0].dimension
         are_parallel = True
@@ -51,7 +63,7 @@ class LinearSystem(object):
         for i in range(1, len(system.planes)):
             if system.planes[i].invalid_plane():
                 return "The system is invalid; there is no intersection."
-            if not first_plane.is_parallel(system.planes[i]):
+            if not first_plane.is_parallel(system.planes[i]) or system.planes[i].is_blank(): #blank planes shouldn't count as parallel. They can be paramterized
                 are_parallel = False
                 break
         if are_parallel:
@@ -67,41 +79,14 @@ class LinearSystem(object):
                         saved_solutions[j] = system[i][system.planes[0].dimension]
         for i in range(len(saved_solutions)):
             if saved_solutions[i] == "None":
-                return "Infinitely many solutions."
+                copy_system = self.compute_rref()
+                direction_vectors = copy_system.extract_direction_vectors() 
+                basepoint = copy_system.extract_basepoint()
+                return Parametrization(basepoint, direction_vectors)
+                #return "Infinitely many solutions."
         return saved_solutions
-        
-        '''
-        if all are parallel to each other, return infinite solutions
-        for each row, starting from len(system.planes) and going to 0
-            test if plane is invalid
-                if so, indicate no solution
-            for each col from len(system.planes[0) to 0
-                if a saved value exists for that column's variable, multiply it by the column variable and add it to the constant
-                if the saved value doesn't exist, is the furthest left 1, and all values right except for constant are 0, save the value as the constant
-            find answers
-            assume no free variables
-        '''
-        
-        '''
-        1. output unique solution to system
-        2. or, indication there is no solution
-        3. or, indication of infinitely many solutions
-        '''
     
-    '''def solve_paramaterized(self):
-        if all are parallel to each other, return infinite solutions
-        for each row, starting from len(system.planes) and going to 0
-            test if plane is invalid
-                if so, indicate no solution
-            for each col from len(system.planes[0) to 0
-                if a saved value exists for that column's variable, multiply it by the column variable and add it to the constant
-                if the saved value doesn't exist, is the furthest left 1, and all values right except for constant are 0, save the value as the constant
-                if the saved value doesn't exist, is the furthest left 1, and some values right other than constant are 0, save the value index as a FREE VARIABLE
-            if no free variables, find answers
-            if multiple free variables, set one to 1 and the rest to 0 in sequence
-            assume no free variables, though?
-        return ""
-        '''
+    # def paramaterize():
     
     def leftmost_one(self, row):
         for i in range(0, self.planes[0].dimension):
@@ -148,6 +133,8 @@ class LinearSystem(object):
     
     def compute_rref(self):
         system = self.compute_triangular_form()
+        system.extract_basepoint()
+        system.extract_direction_vectors()
         
         for current_row in range(len(system.planes)):
             pivot_found = False
@@ -228,6 +215,75 @@ class LinearSystem(object):
         temp = ['Equation {}: {}'.format(i+1,p) for i,p in enumerate(self.planes)]
         ret += '\n'.join(temp)
         return ret
+
+    def extract_basepoint(self): #find the coefficient of each first pivot variable in each row
+        num_variables = self.dimension
+        pivot_indices = self.indices_of_first_nonzero_terms_in_each_row()
+
+        basepoint_coords = [0] * num_variables
+
+        for i, plane in enumerate(self.planes):
+            pivot_var = pivot_indices[i]
+            if pivot_var < 0:
+                break
+            basepoint_coords[pivot_var] = plane.constant_term
+    
+        return Vector(basepoint_coords)
+
+    def extract_direction_vectors(self): #find the coefficient of each column 2, 3, etc variable
+        num_variables = self.dimension
+        pivot_indices = self.indices_of_first_nonzero_terms_in_each_row()
+        free_variable_indices = set(range(num_variables)) - set(pivot_indices)
+
+        direction_vectors = []
+
+        for free_var in free_variable_indices:
+            vector_coords = [0] * num_variables
+            vector_coords[free_var] = 1 # a free variable can only be equal to itself
+            for i, plane in enumerate(self.planes):
+                pivot_var = pivot_indices[i]
+                if pivot_var < 0:
+                    break
+                vector_coords[pivot_var] = -plane.normal_vector[free_var] #take coefficient of free variable for a particular equation, on the other side
+
+            direction_vectors.append(Vector(vector_coords))
+        return direction_vectors
+    
+class Parametrization(object):
+
+    BASEPT_AND_DIR_VECTORS_MUST_BE_IN_SAME_DIM = "Error: The basepoint and direction vectors are not in the same dimension."
+
+    def __init__(self, basepoint, direction_vectors):
+
+        self.basepoint = basepoint
+        self.direction_vectors = direction_vectors
+        self.dimension = self.basepoint.dimension
+        '''print self.basepoint
+        for i in range(len(self.direction_vectors)):
+            print self.direction_vectors[i]'''
+
+        try:
+            for v in direction_vectors:
+                assert v.dimension == self.dimension
+
+        except AssertionError:
+            raise Exception(self.BASEPT_AND_DIR_VECTORS_MUST_BE_IN_SAME_DIM)
+    
+    
+    def __str__(self): 
+        
+        #derive the parameters
+        # x_1 = first value of each vector. basepoint value listed is a constant, second is in terms of t_1, third in t_2, and so on
+        # x_2 = second value of each vector
+        # x_3 = third value of each vector
+        
+        output = ''
+        for coord in range(self.dimension):
+            output += 'x_{} = {} '.format(coord + 1, round(self.basepoint[coord], 3))
+            for free_var, vector in enumerate(self.direction_vectors):
+                output += '+ {} t_{}'.format(round(vector[coord], 3), free_var + 1) 
+            output += '\n'
+        return output
 
 '''
 p0 = Plane(normal_vector=Vector([float('1'),float('1'),float('1')]), constant_term=float('1'))
